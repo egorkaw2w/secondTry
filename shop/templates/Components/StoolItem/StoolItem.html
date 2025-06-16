@@ -1,0 +1,10 @@
+<div class="stool-item">
+    <h3>{{ product.name }}</h3>
+    <p>Цена: {{ product.price }} руб.</p>
+    <p>В наличии: {% if product.is_available %}Да{% else %}Нет{% endif %}</p>
+    <p>{{ product.description|default:"Нет описания" }}</p>
+    <form action="{% url 'add_to_cart' product.id %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn">Заказать</button>
+    </form>
+</div>

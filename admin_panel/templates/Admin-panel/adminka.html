@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}{{ model_name }} - Админ-панель{% endblock %}
+
+{% block content %}
+    <h1>{{ operation }} {{ model_name }}</h1>
+    {% if operation == 'List' %}
+        <a href="{% url 'admin_create' model_name %}" class="btn">Добавить</a>
+        <table>
+            <thead>
+                <tr>
+                    {% for field in fields %}
+                        <th>{{ field.verbose_name|default:field.name }}</th>
+                    {% endfor %}
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for obj in objects %}
+                    <tr>
+                        {% for field in fields %}
+                            <td>{{ obj|get_field_value:field.name }}</td>
+                        {% endfor %}
+                        <td>
+                            <a href="{% url 'admin_update' model_name obj.id %}" class="btn">Редактировать</a>
+                            <a href="{% url 'admin_delete' model_name obj.id %}" class="btn delete-btn">Удалить</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <span class="error">{{ field.errors }}</span>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn">{{ operation }}</button>
+        </form>
+    {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .form-group { margin-bottom: 15px; }
+        .btn { padding: 5px 10px; background-color: #28a745; color: white; border: none; border-radius: 5px; }
+        .btn:hover { background-color: #218838; }
+        .delete-btn { background-color: #dc3545; }
+        .delete-btn:hover { background-color: #c82333; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Убрали JavaScript-фильтр, так как он заменён Python-фильтром -->
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+  {% block title %}Корзина{% endblock %}
+
+  {% block content %}
+      <h1>Корзина</h1>
+      {% if cart_items %}
+          <div class="cart-items">
+              {% for item in cart_items %}
+                  <div class="cart-item">
+                      <h3>{{ item.product.name }}</h3>
+                      <p>Цена: {{ item.product.price }} руб. x {{ item.quantity }} = {{ item.subtotal }} руб.</p>
+                      <form action="{% url 'update_cart' item.product.id %}" method="post">
+                          {% csrf_token %}
+                          <button type="submit" name="action" value="increase" class="btn">+</button>
+                          <button type="submit" name="action" value="decrease" class="btn">-</button>
+                          <button type="submit" name="action" value="remove" class="btn delete-btn">Удалить</button>
+                      </form>
+                  </div>
+              {% endfor %}
+          </div>
+          <div class="cart-total">
+              <h3>Итоговая стоимость: {{ total_price }} руб.</h3>
+              <form action="{% url 'create_order' %}" method="post">
+                  {% csrf_token %}
+                  <button type="submit" class="btn order-btn">Оформить заказ</button>
+              </form>
+          </div>
+      {% else %}
+          <p>Корзина пуста.</p>
+      {% endif %}
+  {% endblock %}
+
+  {% block extra_css %}
+      <style>
+          .cart-items {
+              padding: 20px;
+          }
+          .cart-item {
+              border: 1px solid #ddd;
+              border-radius: 5px;
+              padding: 15px;
+              margin-bottom: 10px;
+          }
+          .quantity-controls {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+          }
+          .quantity-controls .btn {
+              padding: 5px 10px;
+              background-color: #007bff;
+              color: white;
+              border: none;
+              border-radius: 5px;
+              cursor: pointer;
+          }
+          .quantity-controls .btn:hover {
+              background-color: #0056b3;
+          }
+          .delete-btn {
+              background-color: #dc3545;
+          }
+          .delete-btn:hover {
+              background-color: #c82333;
+          }
+          .cart-total {
+              padding: 20px;
+              border-top: 1px solid #ddd;
+              text-align: right;
+          }
+          .order-btn {
+              padding: 10px 20px;
+              background-color: #28a745;
+              color: white;
+              border: none;
+              border-radius: 5px;
+              cursor: pointer;
+          }
+          .order-btn:hover {
+              background-color: #218838;
+          }
+      </style>
+  {% endblock %}

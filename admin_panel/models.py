@@ -1,8 +1,8 @@
 from django.db import models
+from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
-# Категория табуреток
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="Название категории")
     description = models.TextField(blank=True, null=True, verbose_name="Описание")
@@ -16,7 +16,6 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-# Материал табуреток
 class Material(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name="Название материала")
     description = models.TextField(blank=True, null=True, verbose_name="Описание")
@@ -29,7 +28,6 @@ class Material(models.Model):
     def __str__(self):
         return self.name
 
-# Товар (табуретка)
 class Product(models.Model):
     name = models.CharField(max_length=200, verbose_name="Название")
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name="products", verbose_name="Категория")
@@ -48,19 +46,6 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
-# Корзина (без привязки к пользователю, как общая корзина)
-class Cart(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
-
-    class Meta:
-        verbose_name = "Корзина"
-        verbose_name_plural = "Корзины"
-
-    def __str__(self):
-        return f"Корзина #{self.id}"
-
-# Заказ
 class Order(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Ожидает обработки'),
@@ -70,6 +55,7 @@ class Order(models.Model):
         ('cancelled', 'Отменен'),
     )
 
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders", verbose_name="Пользователь")
     total_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], verbose_name="Общая стоимость")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name="Статус")
     shipping_address = models.TextField(verbose_name="Адрес доставки")
@@ -81,9 +67,8 @@ class Order(models.Model):
         verbose_name_plural = "Заказы"
 
     def __str__(self):
-        return f"Заказ #{self.id}"
+        return f"Заказ #{self.id} от {self.user.username}"
 
-# Элемент заказа
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items", verbose_name="Заказ")
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, related_name="order_items", verbose_name="Товар")
@@ -97,7 +82,47 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.product.name} ({self.quantity}) в заказе #{self.order.id}"
 
-# Платеж
+class Role(models.Model):
+    name = models.CharField(max_length=50, unique=True, verbose_name="Название роли")
+    description = models.TextField(blank=True, null=True, verbose_name="Описание роли")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+
+    class Meta:
+        verbose_name = "Роль"
+        verbose_name_plural = "Роли"
+
+    def __str__(self):
+        return self.name
+
+class UserRole(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_roles", verbose_name="Пользователь")
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="role_users", verbose_name="Роль")
+    assigned_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата назначения")
+
+    class Meta:
+        verbose_name = "Роль пользователя"
+        verbose_name_plural = "Роли пользователей"
+        unique_together = ('user', 'role')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.role.name}"
+
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reviews", verbose_name="Товар")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reviews", verbose_name="Пользователь")
+    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], verbose_name="Оценка")
+    comment = models.TextField(blank=True, null=True, verbose_name="Комментарий")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
+
+    class Meta:
+        verbose_name = "Отзыв"
+        verbose_name_plural = "Отзывы"
+        unique_together = ('product', 'user')
+
+    def __str__(self):
+        return f"Отзыв {self.user.username} на {self.product.name}"
+
 class Payment(models.Model):
     PAYMENT_METHOD_CHOICES = (
         ('card', 'Кредитная карта'),
@@ -118,19 +143,3 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Платеж для заказа #{self.order.id}"
-
-# Отзыв о товаре
-class Review(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="reviews", verbose_name="Товар")
-    rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], verbose_name="Оценка")
-    comment = models.TextField(blank=True, null=True, verbose_name="Комментарий")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
-
-    class Meta:
-        verbose_name = "Отзыв"
-        verbose_name_plural = "Отзывы"
-        unique_together = ('product',)
-
-    def __str__(self):
-        return f"Отзыв на {self.product.name}"

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои заказы{% endblock %}
+
+{% block content %}
+    <h1>Мои заказы</h1>
+    {% if orders %}
+        {% for order in orders %}
+            <div class="order-item">
+                <h3>Заказ #{{ order.id }}</h3>
+                <p>Статус: {{ order.get_status_display }}</p>
+                <p>Общая стоимость: {{ order.total_price }} руб.</p>
+                <p>Дата создания: {{ order.created_at }}</p>
+                <h4>Товары:</h4>
+                <ul>
+                    {% for item in order.items.all %}
+                        <li>{{ item.product.name }} x{{ item.quantity }} ({{ item.price }} руб.)</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>У вас нет заказов.</p>
+    {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .order-item {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+    </style>
+{% endblock %}
