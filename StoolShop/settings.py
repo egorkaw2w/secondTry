@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'StoolShop.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
+        'ENGINE': 'django.db.backends.postgresql',
         'HOST': '127.0.0.1',
         'PORT': '5432',
         'NAME': 'StoolShop',
@@ -132,4 +132,4 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-STATIC_ROOT = os.path.join(BASE_DIR, 'shop/static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
